@@ -1,0 +1,49 @@
+{
+  "objects": {
+    "traffic light": 55983,
+    "lane/road curb": 80198,
+    "traffic sign": 81896,
+    "car": 98856,
+    "area/drivable": 91494,
+    "area/alternative": 52147,
+    "lane/single white": 74043,
+    "person": 31537,
+    "lane/double yellow": 21621,
+    "bus": 12704,
+    "lane/single yellow": 14363,
+    "truck": 27104,
+    "lane/crosswalk": 36556,
+    "bike": 6110,
+    "rider": 5109,
+    "lane/double white": 3624,
+    "motor": 3258,
+    "train": 145,
+    "lane/single other": 150,
+    "lane/double other": 18,
+    "area/unknown": 2
+  },
+  "weather": {
+    "clear": 53514,
+    "rainy": 7127,
+    "undefined": 11631,
+    "snowy": 7891,
+    "overcast": 12591,
+    "partly cloudy": 7065,
+    "foggy": 181
+  },
+  "scene": {
+    "city street": 61981,
+    "highway": 24982,
+    "residential": 11740,
+    "parking lot": 535,
+    "undefined": 517,
+    "tunnel": 205,
+    "gas stations": 40
+  },
+  "timeofday": {
+    "daytime": 52504,
+    "dawn/dusk": 7287,
+    "night": 39993,
+    "undefined": 216
+  }
+}
