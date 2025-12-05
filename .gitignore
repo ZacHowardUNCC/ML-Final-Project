@@ -1,5 +1,9 @@
 .venv/
 data/*
+!data/images/
+!data/labels/
+data/images/*
+data/labels/*
 !data/images/.ExtractImagesHere
 !data/labels/.ExtractLabelsHere
 ~$*
