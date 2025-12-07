@@ -37,7 +37,7 @@ def main():
     labels = parse_labels("data/labels")
 
     # Store labels dictionary in a json file
-    output_file = Path("visualization/parsed_labels.json")
+    output_file = Path("data/parsed_labels.json")
     with open(output_file, "w") as f:
         json.dump(labels, f, indent=2)
     print("parsed_labels.json file has been successfully created.")

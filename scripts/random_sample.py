@@ -4,13 +4,15 @@ import json
 import random
 import shutil
 from typing import Optional
+from preprocess_for_binary_classification import preprocess_images
 
 
-TOTAL_SAMPLES = 5
+TOTAL_SAMPLES = 10000
 SEED = 42
-PARSED_LABELS_PATH = Path("visualization/parsed_labels.json")
+PARSED_LABELS_PATH = Path("data/parsed_labels.json")
+DOWNSCALE_FACTOR = 5
 
-class Object(Enum):
+class Objects(Enum):
     TRAFFIC_LIGHT = "traffic light"
     LANE_ROAD_CURB = "lane/road curb"
     TRAFFIC_SIGN = "traffic sign"
@@ -53,7 +55,7 @@ def make_dir(base_dir):
     (sample_dir / "images").mkdir()
     (sample_dir / "labels").mkdir()
 
-def sample_dataset(base_dir, total_samples=TOTAL_SAMPLES, seed=SEED, object: Optional[Object] = None):
+def sample_dataset(base_dir, total_samples=TOTAL_SAMPLES, seed=SEED, selected_object: Optional[Objects] = None):
     # Sample from full dataset or based on object presence
     base_dir = Path(base_dir).resolve(strict=True)
     images_src = base_dir / "images"
@@ -65,7 +67,7 @@ def sample_dataset(base_dir, total_samples=TOTAL_SAMPLES, seed=SEED, object: Opt
     rand = random.Random(seed)
 
     # Sample dataset from base_dir into sample directory
-    if object is None:
+    if selected_object is None:
         # Sample randomly from the full dataset
         candidates = list(labels_src.glob("*.json"))
 
@@ -80,19 +82,61 @@ def sample_dataset(base_dir, total_samples=TOTAL_SAMPLES, seed=SEED, object: Opt
             if image_path.exists():
                 shutil.copy2(image_path, images_dir / image_path.name)
             else:
-                missing_images.append(label_path.name)
+                missing_images.append(label_path.stem)
 
         return {"selected_count": len(samples), "missing_images_for": missing_images}
     else:
-        # Sample based on object presence
-        pass
+        # Sample randomly based on object presence
+        parsed_labels = _load_parsed_labels()
+        object_name = selected_object.value
+        object_count = parsed_labels["objects"][object_name]
+        available_count = min(object_count, (100000 - object_count))
+        target_count = total_samples // 2
+        
+        if target_count > available_count:
+            raise ValueError(f"half of total_samples cannot be greater than {available_count} for object {object_name}.")
 
+        files = list(labels_src.glob("*.json"))
+        rand.shuffle(files)
+        with_object = []
+        without_object = []
+
+        # Loop through json files until we have target_count samples in with_object and without_object lists
+        for file in files:
+            label = json.loads(file.read_text())
+
+            if any(objects["category"] == object_name for objects in label.get("frames",[{}])[0].get("objects", [])):
+                with_object.append(file)
+            else:
+                without_object.append(file)
+
+            if len(with_object) >= target_count and len(without_object) >= target_count:
+                break
+
+        # Trim extra samples to ensure perfect balance between classes
+        with_object = with_object[:target_count]
+        without_object = without_object[:target_count]
+
+        # Copy sampled files to sample directory
+        missing_images = []
+        for label_path in with_object + without_object:
+            shutil.copy2(label_path, labels_dir / label_path.name)
+            image_path = images_src / f"{label_path.stem}.jpg"
+            if image_path.exists():
+                shutil.copy2(image_path, images_dir / image_path.name)
+            else:
+                missing_images.append(label_path.stem)
+
+        return {"selected_count": len(with_object + without_object), "missing_images_for": missing_images}
 
 def main():
     # Make sample directory and sub directories
     make_dir("data")
     # Sample from the full 100k dataset
-    sample_dataset("data")
+    result = sample_dataset("data", selected_object=Objects.PERSON)
+    print(result)
+    # Preprocess sampled images for binary classification
+    preprocess_images(selected_object=Objects.PERSON, downscale_factor=DOWNSCALE_FACTOR)
 
 if __name__ == "__main__":
     main()
