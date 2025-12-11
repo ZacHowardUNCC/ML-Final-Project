@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 from skimage.feature import hog
+from tqdm import tqdm
 
 
 def preprocess_images(selected_object, downscale_factor, images_dir="data/sample/images", labels_dir="data/sample/labels"):
@@ -11,8 +12,9 @@ def preprocess_images(selected_object, downscale_factor, images_dir="data/sample
     labels_dir = Path(labels_dir)
     X = []
     y = []
+    image_paths = sorted(images_dir.glob("*.jpg"))
 
-    for image_path in sorted(images_dir.glob("*.jpg")):
+    for image_path in tqdm(image_paths, desc="Preprocessing images", unit="image", total=len(image_paths)):
         label_path = labels_dir / f"{image_path.stem}.json"
 
         if not label_path.exists():

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 from pathlib import Path
+from tqdm import tqdm
 
 
 def parse_labels(labels_dir):
@@ -16,7 +17,8 @@ def parse_labels(labels_dir):
     }
 
     # Loop through all json files
-    for file in labels_dir.glob("*.json"):
+    files = list(labels_dir.glob("*.json"))
+    for file in tqdm(files, desc="Parsing label files", unit="json file"):
         label = json.loads(file.read_text())
 
         # Add unique objects to the labels dictionary

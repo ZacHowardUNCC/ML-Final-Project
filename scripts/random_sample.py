@@ -5,7 +5,7 @@ import random
 import shutil
 from typing import Optional
 from preprocess_for_binary_classification import preprocess_images
-
+from tqdm import tqdm
 
 TOTAL_SAMPLES = 10000
 SEED = 42
@@ -49,9 +49,11 @@ def make_dir(base_dir):
     sample_dir = base_dir / "sample"
 
     if sample_dir.exists():
+        print(f"Removing existing sample directory at {sample_dir}")
         shutil.rmtree(sample_dir)
 
     sample_dir.mkdir()
+    print(f"Created new sample directory at {sample_dir}")
     (sample_dir / "images").mkdir()
     (sample_dir / "labels").mkdir()
 
@@ -76,7 +78,7 @@ def sample_dataset(base_dir, total_samples=TOTAL_SAMPLES, seed=SEED, selected_ob
         samples = rand.sample(candidates, total_samples)
 
         missing_images = []
-        for label_path in samples:
+        for label_path in tqdm(samples, desc="Copying sampled files", unit="json and jpg file"):
             shutil.copy2(label_path, labels_dir / label_path.name)
             image_path = images_src / f"{label_path.stem}.jpg"
             if image_path.exists():
@@ -102,7 +104,7 @@ def sample_dataset(base_dir, total_samples=TOTAL_SAMPLES, seed=SEED, selected_ob
         without_object = []
 
         # Loop through json files until we have target_count samples in with_object and without_object lists
-        for file in files:
+        for file in tqdm(files, desc=f"Sampling files for object '{object_name}'", unit="json file"):
             label = json.loads(file.read_text())
 
             if any(objects["category"] == object_name for objects in label.get("frames",[{}])[0].get("objects", [])):
@@ -119,7 +121,8 @@ def sample_dataset(base_dir, total_samples=TOTAL_SAMPLES, seed=SEED, selected_ob
 
         # Copy sampled files to sample directory
         missing_images = []
-        for label_path in with_object + without_object:
+        all_samples = with_object + without_object
+        for label_path in tqdm(all_samples, desc="Copying sampled files", unit="json and jpg file"):
             shutil.copy2(label_path, labels_dir / label_path.name)
             image_path = images_src / f"{label_path.stem}.jpg"
             if image_path.exists():
